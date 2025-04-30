@@ -1,0 +1,94 @@
+---
+title: "Predicting Medical Insurance Charges"
+author: "William Kim"
+format: revealjs
+---
+
+## Introduction
+
+-   The goal of this project is to predict **medical insurance charges** using multiple regression.
+-   The dataset contains **1,338 individuals** with **6 independent variables** (age, sex, BMI, children, smoker, region).
+-   We will compare **three regression models** and select the best one.
+
+---
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(broom)
+library(dotwhisker)
+library(modelr)
+
+insurance <- read_csv("insurance.csv")
+
+
+view(insurance)
+```
+
+---
+
+------------------------------------------------------------------------
+
+```{r}
+ggplot(insurance, aes(x = age, y = charges)) +
+  geom_point(alpha = 0.4, color = "#2c3e50") +
+  geom_smooth(method = "loess", color = "red", se = TRUE) +
+  labs(title = "Medical Charges by Age",
+       x = "Age",
+       y = "Charges ($)") +
+  theme_minimal()
+```
+
+---
+
+------------------------------------------------------------------------
+
+```{r}
+ggplot(insurance, aes(x = smoker, y = charges, fill = smoker)) + geom_boxplot() + labs(title = "Medical Charges by Smoking Status", y = "Charges ($)", x = "Smoker") + theme_minimal()
+```
+
+------------------------------------------------------------------------
+
+```{r}
+# numeric variables only
+model1 <- lm(charges ~ age + bmi + children, data = insurance)
+summary(model1)
+```
+
+------------------------------------------------------------------------
+
+```{r}
+# adding smoking status
+model2 <- lm(charges ~ age + bmi + children + smoker, data = insurance)
+summary(model2)
+```
+
+------------------------------------------------------------------------
+
+```{r}
+# full model
+model3 <- lm(charges ~ age + bmi + children + sex + smoker + region, data = insurance)
+summary(model3)
+```
+
+------------------------------------------------------------------------
+
+```{r}
+model_summaries <- tibble(
+  Model = c("Model 1", "Model 2", "Model 3"),
+  
+  Adj_R2 = c(summary(model1)$adj.r.squared,
+             summary(model2)$adj.r.squared,
+             summary(model3)$adj.r.squared),
+  
+  AIC = c(AIC(model1), AIC(model2), AIC(model3)),
+  
+  RMSE = c(rmse(model1, insurance),
+           rmse(model2, insurance),
+           rmse(model3, insurance))
+)
+
+print(model_summaries)
+```
+
+------------------------------------------------------------------------
